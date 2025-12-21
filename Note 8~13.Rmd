@@ -1,0 +1,80 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+```{r}
+library(astsa)
+library(tseries)
+library(fracdiff)
+library(forecast)
+```
+
+
+# MA(q)
+```{r}
+
+
+```
+
+
+# AR(p)
+```{r}
+
+
+```
+
+
+# Building ARIMA
+```{r}
+
+
+```
+
+
+
+
+```{r}
+acf.1 <- ARMAacf(ar=c(-0.7), lag.max=20, pacf=F)
+plot(acf.1, type="h", xlab="Lag", ylab="ACF", main="Theoretical ACF of AR(1) with phi=-0.7")
+abline(h=0)
+```
+
+```{r}
+xt <- rnorm(200)
+plot(xt, type="b")
+abline(h=0)
+acf(xt, lag.max=40)
+```
+
+
+
+```{r}
+plot(jj)
+```
+
+
+
+```{r}
+acf(jj, lag.max = 20)
+```
+
+
+```{r}
+y <- rnorm(100)
+Box.test(y, lag=1, type="Ljung-Box")
+```
+
+
+```{r}
+plot(gtemp)
+```
+
+
+```{r}
+
+```
+
+
+
+
+

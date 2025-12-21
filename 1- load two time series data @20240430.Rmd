@@ -1,0 +1,256 @@
+---
+title: "STAT672_ Time Series Project"
+output:
+  html_document:
+    df_print: paged
+---
+# Load Libraries
+```{r}
+library(usethis)
+library(devtools)
+library(ggplot2)
+library(ggfortify)
+library(dplyr)
+library(magrittr)
+library(lubridate)
+library(forecast)
+library(tidyverse)
+library(mt)
+library(lmtest)
+library(outliers)
+library(EnvStats)
+```
+
+# Load Data for station 1 
+
+```{r}
+getwd()
+```
+
+```{r}
+oiltemp_1 <- read.csv("./oil station 1 hourly average for each day.csv",header=TRUE)
+head(oiltemp_1,10)
+
+```
+
+```{r}
+summary(oiltemp_1)
+```
+
+```{r}
+colnames(oiltemp_1)
+```
+```{r}
+qqPlot(oiltemp_1$OT)
+```
+
+```{r}
+ggplot(oiltemp_1, aes(x=TimeID)) + 
+  geom_line(aes(y=OT), color="green")
+```
+
+
+```{r}
+xt1 <- oiltemp_1$OT
+```
+
+```{r}
+plot(xt1)
+abline(h=0)
+```
+```{r}
+#abline(h=0)
+acf(xt1, lag.max=40)
+```
+```{r}
+qqnorm(xt1)
+```
+
+```{r}
+hist(xt1)
+```
+
+```{r}
+fit <- lm(xt1 ~ time(xt1))
+summary(fit)
+```
+
+```{r}
+plot(xt1, type="o", ylab="Oil Temperature")
+abline(fit)
+```
+
+```{r}
+plot(as.vector(time(xt1)), fit$res, xlab="Year")
+abline(h=0)
+```
+
+
+# Load Data for station 2
+
+
+```{r}
+oiltemp_2 <- read.csv("./oil station 2 hourly average for each day.csv",header=TRUE)
+head(oiltemp_2,10)
+
+```
+
+```{r}
+summary(oiltemp_2)
+```
+
+```{r}
+colnames(oiltemp_2)
+```
+```{r}
+qqPlot(oiltemp_2$OT)
+```
+
+```{r}
+ggplot(oiltemp_2, aes(x=TimeID)) + 
+  geom_line(aes(y=OT), color="darkred")
+```
+
+# Decomposition 
+```{r}
+xt2 <- oiltemp_2$OT
+```
+
+```{r}
+plot(xt2)
+abline(h=0)
+```
+```{r}
+#abline(h=0)
+acf(xt2, lag.max=40)
+```
+```{r}
+qqnorm(xt2)
+```
+
+```{r}
+hist(xt2)
+```
+
+```{r}
+fit <- lm(xt2 ~ time(xt2))
+summary(fit)
+```
+
+```{r}
+plot(xt2, type="o", ylab="Oil Temperature")
+abline(fit)
+```
+
+```{r}
+plot(as.vector(time(xt2)), fit$res, xlab="Year")
+abline(h=0)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Model Building - ARIMA
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Multivariate Time Series
+
+```{r}
+oiltemp_station1 <- read.csv("./oil temperature 1.csv",header=TRUE)
+head(oiltemp_station1,10)
+```
+
+
+
+```{r}
+summary(oiltemp_station1)
+```
+
+```{r}
+colnames(oiltemp_station1)
+```
+
+```{r}
+ggplot(oiltemp_station1, aes(x=HUFL, y = OT)) + geom_point(shape = 3)
+ggplot(oiltemp_station1, aes(x=HULL, y = OT)) + geom_point(shape = 3)
+ggplot(oiltemp_station1, aes(x=MUFL, y = OT)) + geom_point(shape = 3)
+ggplot(oiltemp_station1, aes(x=MULL, y = OT)) + geom_point(shape = 3)
+ggplot(oiltemp_station1, aes(x=LUFL, y = OT)) + geom_point(shape = 3)
+ggplot(oiltemp_station1, aes(x=LULL, y = OT)) + geom_point(shape = 3)
+```
+
+```{r}
+qqPlot(oiltemp_station1$HUFL)
+qqPlot(oiltemp_station1$HULL)
+qqPlot(oiltemp_station1$MUFL)
+qqPlot(oiltemp_station1$MULL)
+qqPlot(oiltemp_station1$LUFL)
+qqPlot(oiltemp_station1$LULL)
+
+```
+
+
+```{r}
+ggplot(oiltemp_station1, aes(x=TimeID)) + 
+  geom_line(aes(y=OT), color="green") + 
+  geom_line(aes(y=HULL), color="red")
+
+```
+
+
+
+
+```{r}
+Feature_X<-as.matrix(cbind(oiltemp_station1$HUFL,oiltemp_station1$HULL, oiltemp_station1$MUFL, oiltemp_station1$MULL, oiltemp_station1$LUFL, oiltemp_station1$LULL, oiltemp_station1$OT))
+```
+
+```{r}
+par(pairs(Feature_X))
+```
+
+
+
+
+```{r}
+ggplot(medicine, aes(x=TimeID)) + 
+  geom_line(aes(y=A), color="green") + 
+  geom_line(aes(y=B), color="red")
+```
+

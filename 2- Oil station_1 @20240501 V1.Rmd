@@ -1,0 +1,775 @@
+---
+title: "STAT672_ Time Series Project"
+output:
+  html_document:
+    df_print: paged
+---
+
+# 0 Load Libraries
+```{r}
+library(usethis)
+library(devtools)
+library(ggplot2)
+library(ggfortify)
+library(dplyr)
+library(magrittr)
+library(lubridate)
+library(forecast)
+library(tidyverse)
+library(mt)
+library(lmtest)
+library(outliers)
+library(EnvStats)
+
+```
+
+
+```{r}
+library(tseries)
+```
+
+
+# 1 Load Data for station 1 
+```{r}
+getwd()
+```
+
+```{r}
+oiltemp_1 <- read.csv("./oil station 1 hourly average for each day.csv",header=TRUE)
+head(oiltemp_1, 10)
+```
+
+```{r}
+attach(oiltemp_1)
+```
+```{r}
+#summary(oiltemp_1)
+```
+```{r}
+colnames(oiltemp_1)
+```
+```{r}
+#Feature_X<-as.matrix(cbind(oiltemp_1$HUFL,oiltemp_1$HULL, oiltemp_1$MUFL, oiltemp_1$MULL, oiltemp_1$LUFL, oiltemp_1$LULL, oiltemp_1$OT))
+#par(pairs(Feature_X))
+```
+```{r}
+#pca <- prcomp(Feature_X, scale=TRUE)
+#summary(pca)
+```
+```{r}
+colnames(oiltemp_1)
+```
+
+```{r}
+save.plot <- ggplot(data=oiltemp_1, aes(x=LULL, y=OT))
+save.plot + geom_point(size=3)
+
+save.plot <- ggplot(data=oiltemp_1, aes(x=LUFL, y=OT))
+save.plot + geom_point(size=3)
+
+save.plot <- ggplot(data=oiltemp_1, aes(x=MULL, y=OT))
+save.plot + geom_point(size=3)
+
+save.plot <- ggplot(data=oiltemp_1, aes(x=MUFL, y=OT))
+save.plot + geom_point(size=3)
+
+save.plot <- ggplot(data=oiltemp_1, aes(x=HULL, y=OT))
+save.plot + geom_point(size=3)
+
+save.plot <- ggplot(data=oiltemp_1, aes(x=HUFL, y=OT))
+save.plot + geom_point(size=3)
+```
+
+## Predictive Variable
+```{r}
+#qqPlot(OT)
+
+ggplot(oiltemp_1, aes(x=TimeID)) + 
+  geom_line(aes(y=OT), color="darkblue")
+
+#colnames(oiltemp_1)
+```
+
+```{r}
+acf(OT, lag.max=30)
+```
+
+```{r}
+pacf(OT, lag.max=30)
+```
+
+```{r}
+adf.test(OT)
+```
+
+
+## Feature
+
+```{r}
+ggplot(oiltemp_1, aes(x=TimeID)) + 
+  geom_line(aes(y=HUFL), color="darkblue")
+
+ggplot(oiltemp_1, aes(x=TimeID)) + 
+  geom_line(aes(y=HULL), color="darkblue")
+
+ggplot(oiltemp_1, aes(x=TimeID)) + 
+  geom_line(aes(y=MUFL), color="darkblue")
+
+ggplot(oiltemp_1, aes(x=TimeID)) + 
+  geom_line(aes(y=MULL), color="darkblue")
+
+ggplot(oiltemp_1, aes(x=TimeID)) + 
+  geom_line(aes(y=LUFL), color="darkblue")
+
+ggplot(oiltemp_1, aes(x=TimeID)) + 
+  geom_line(aes(y=LULL), color="darkblue")
+```
+
+
+```{r}
+adf.test(HUFL)
+adf.test(HULL)
+adf.test(MUFL)
+adf.test(MULL)
+adf.test(LUFL)
+adf.test(LULL)
+```
+
+
+
+```{r}
+acf(HUFL, lag.max=30)
+acf(HULL, lag.max=30)
+acf(MUFL, lag.max=30)
+acf(MULL, lag.max=30)
+acf(LUFL, lag.max=30)
+acf(LULL, lag.max=30)
+```
+
+
+
+
+
+# 2 Classical Regression 
+
+fit1 <- lm(xt1 ~ time(xt1))
+summary(fit1)
+anova(fit1)
+plot(xt1, type="o", ylab="Oil Temperature 1")
+abline(fit1)
+plot(as.vector(time(xt1)), fit1$res, xlab="Days")
+abline(h=0)
+
+
+oiltemp_1$HUFL + oiltemp_1$HULL + oiltemp_1$MUFL + oiltemp_1$MULL + oiltemp_1$LUFL + oiltemp_1$LULL
+fit2 <- lm(xt1 ~ oiltemp_1$HUFL + oiltemp_1$HULL + oiltemp_1$MUFL + oiltemp_1$MULL + oiltemp_1$LUFL + oiltemp_1$LULL + time(xt1))
+summary(fit2)
+anova(fit2)
+plot(xt1, type="o", ylab="Oil Temperature 1")
+abline(fit2)
+
+fit3 <- lm(xt1 ~ oiltemp_1$MUFL + oiltemp_1$LUFL + time(xt1))
+summary(fit3)
+plot(xt1, type="o", ylab="Oil Temperature 1")
+abline(fit3)
+
+
+
+```{r}
+colnames(oiltemp_1)
+```
+
+
+## Model fit linear regression 
+### 1) model1
+```{r}
+trend <- time(OT)
+hufl <- HUFL - mean(HUFL)
+hull <- HULL - mean(HULL)
+mufl <- MUFL - mean(MUFL)
+mull <- MULL - mean(MULL)
+lufl <- LUFL - mean(LUFL)
+lull <- LULL - mean(LULL)
+lufl2 <- lufl^2
+lull2 <- lull^2
+fit.model1 <- lm(OT ~ trend + hufl + hull + mufl + mull + (lufl2) + (lull2))
+```
+
+```{r}
+summary(fit.model1)
+```
+
+```{r}
+anova(fit.model1)
+```
+
+```{r}
+plot(OT, type="line")
+lines(fit.model1$fitted.values, lty=2, col="blue")
+```
+
+```{r}
+num <- length(OT)
+# AIC
+AIC(fit.model1)/num - log(2*pi)
+# BIC
+AIC(fit.model1, k=log(num))/num - log(2*pi)
+# AICc
+log(sum(resid(fit.model1)^2)/num) + (num +5)/(num -5 -2)
+```
+
+check residual assumption: iid, normality
+```{r}
+plot(as.vector(time(OT)), fit.model1$residual, xlab="Days")
+abline(h=0)
+```
+residual assumption: independence \ 
+
+H0: The data are independently distributed 
+Ha: The data are not independently distributed; they exhibit serial correlation.
+```{r}
+# Box-Pierce test and Ljung-Box test
+Box.test(fit.model1$residuals, lag=40, fitdf=2)
+Box.test(fit.model1$residuals, lag=40, fitdf=1)
+Box.test(fit.model1$residuals, lag=40, fitdf=0)
+```
+
+```{r}
+acf(fit.model1$residuals, lag.max=40)
+rho.hat <- acf(fit.model1$residuals, lag.max=40, plot=F)$acf[-1]
+n <- length(fit.model1$residuals)
+h <- length(rho.hat)
+q <- n*(n+2)*sum(rho.hat^2/(n-(1:h)))
+q
+pchisq(q, df=h, lower=F)
+
+```
+
+Check normality
+```{r}
+qqnorm(fit.model1$residuals)
+hist(fit.model1$residuals)
+```
+
+
+
+### 2) model2
+```{r}
+trend <- time(OT)
+hufl <- HUFL - mean(HUFL)
+hull <- HULL - mean(HULL)
+mufl <- MUFL - mean(MUFL)
+mull <- MULL - mean(MULL)
+lufl <- LUFL - mean(LUFL)
+lull <- LULL - mean(LULL)
+
+lufl2 <- lufl^2
+lull2 <- lull^2
+
+fit.model2 <- lm(OT ~ trend + hufl + hull + mufl + mull + (lufl +lufl2) + (lull +lull2))
+```
+
+```{r}
+summary(fit.model2)
+```
+
+```{r}
+anova(fit.model2)
+```
+
+
+```{r}
+plot(OT, type="line")
+lines(fit.model2$fitted.values, lty=2, col="blue")
+```
+
+
+```{r}
+num <- length(OT)
+# AIC
+AIC(fit.model2)/num - log(2*pi)
+# BIC
+AIC(fit.model2, k=log(num))/num - log(2*pi)
+# AICc
+log(sum(resid(fit.model2)^2)/num) + (num +5)/(num -5 -2)
+```
+
+
+
+```{r}
+# Box-Pierce test and Ljung-Box test
+Box.test(fit.model2$residuals, lag=40, fitdf=2)
+Box.test(fit.model2$residuals, lag=40, fitdf=1)
+Box.test(fit.model2$residuals, lag=40, fitdf=0)
+```
+
+```{r}
+qqnorm(fit.model2$residuals)
+hist(fit.model2$residuals)
+```
+
+
+
+
+### 3) model3
+```{r}
+trend <- time(OT)
+hufl <- HUFL - mean(HUFL)
+hull <- HULL - mean(HULL)
+mufl <- MUFL - mean(MUFL)
+mull <- MULL - mean(MULL)
+lufl <- LUFL - mean(LUFL)
+lull <- LULL - mean(LULL)
+
+lufl2 <- lufl^2
+lull2 <- lull^2
+
+hufl2 <- hufl^2
+hull2 <- hull^2
+
+mufl2 <- mufl^2
+mull2 <- mull^2
+
+fit.model3 <- lm(OT ~ trend + (hufl+hufl2) + (hull+hull2) + (mufl+mufl2) + (mull+mull2) + (lufl+lufl2) + (lull+lull2))
+```
+
+```{r}
+summary(fit.model3)
+```
+```{r}
+anova(fit.model3)
+```
+
+
+```{r}
+num <- length(OT)
+# AIC
+AIC(fit.model3)/num - log(2*pi)
+# BIC
+AIC(fit.model3, k=log(num))/num - log(2*pi)
+# AICc
+log(sum(resid(fit.model3)^2)/num) + (num +5)/(num -5 -2)
+```
+
+
+
+
+```{r}
+plot(OT)
+lines(fit.model3$fitted.values, lty=2, col="blue")
+```
+
+
+
+
+
+
+# 3 Data Process
+
+## 3.1 Stationary Checking
+
+Log Transformation 
+
+```{r}
+ggplot(oiltemp_1, aes(x=TimeID)) + 
+  geom_line(aes(y=log(OT)), color="darkblue")
+```
+
+```{r}
+plot(log(OT), type="line")
+```
+
+
+```{r}
+log.OT <- na.remove(log(OT))
+```
+
+```{r}
+adf_test <- adf.test(log.OT)
+adf_test
+```
+
+
+
+
+
+```{r}
+adf_test <- adf.test(OT)
+adf_test
+```
+
+
+
+
+
+## 3.2 Differencing to remove trend and seasonality
+
+The first step in the analysis of any time series is to plot the data. \
+1) if there are any apparent discontinuities in the series, such as a sudden change of level, it may be advisable to analyze the series by first breaking it into homogeneous segments. \
+2) if there are outlying observations, they should be studied carefully to check whether there is any justification for discarding them. \
+
+
+```{r}
+plot(OT, type="line", col="blue")
+plot(diff(OT), type="line", col="green")
+plot(diff(log(OT)), type="line")
+```
+
+
+```{r}
+acf(OT)
+acf(diff(OT))
+acf(diff(log.OT))
+```
+
+```{r}
+mean(diff(OT))
+```
+
+## 3.3 predictive variable after trend removed 
+
+```{r}
+Y <- diff(OT)
+```
+
+
+
+```{r}
+t <- time(Y)
+t.sq <- t^2
+fit.model4 <- lm(Y ~ t)
+```
+
+```{r}
+summary(fit.model4)
+```
+
+
+```{r}
+plot(Y, type="line", lwd=1, col="blue")
+```
+
+```{r}
+acf(Y, lag.max = 40)
+```
+
+```{r}
+pacf(Y, lag.max = 40)
+```
+
+
+
+# 4 Building Models: AR() MA() ARIMA()
+
+Fit the model, \
+Forecating, \
+Check Residuals, \
+
+
+
+## 4.1 AR(p=8) Note12 Dow Jones Utilities
+
+by pacf, cuts off after lag(8)
+
+```{r}
+#adfTest(Y, lag=4, type="nc")
+adf.test(Y)
+```
+
+
+```{r}
+model.fit1 <- arima(pred, order=c(8, 0, 0))
+model.fit1
+```
+
+```{r}
+num <- length(OT)
+# AIC
+AIC(model.fit1)/num - log(2*pi)
+# BIC
+AIC(model.fit1, k=log(num))/num - log(2*pi)
+# AICc
+log(sum(resid(model.fit1)^2)/num) + (num +5)/(num -5 -2)
+```
+
+```
+
+```{r}
+model1 <- predict(model.fit1, n.ahead=10)
+model1
+
+n <- length(Y)
+L <- min(Y)
+U <- max(Y)
+plot(Y, xlim=c(1, n+3), ylim=c(L,U), type="line")
+abline(h=0)
+
+lines(model1$pred, col="red", lwd=2)
+lines((model1$pred + 1.96*model1$se), col="red", lty=2, lwd=2)
+lines((model1$pred - 1.96*model1$se), col="red", lty=2, lwd=2)
+```
+
+
+
+```{r}
+y.fit <- ar(Y, method="yule-walker", order=8, demean=T)
+y.fit
+```
+
+
+```{r}
+num <- length(OT)
+# AIC
+AIC(model.fit1)/num - log(2*pi)
+# BIC
+AIC(model.fit1, k=log(num))/num - log(2*pi)
+# AICc
+log(sum(resid(model.fit1)^2)/num) + (num +5)/(num -5 -2)
+```
+
+
+
+```{r}
+model1 <- predict(y.fit, n.ahead=10)
+model1
+
+n <- length(Y)
+L <- min(Y)
+U <- max(Y)
+plot(Y, xlim=c(1, n+3), ylim=c(L,U), type="line")
+abline(h=0)
+
+lines(model1$pred, col="red", lwd=2)
+lines((model1$pred + 1.96*model1$se), col="red", lty=2, lwd=2)
+lines((model1$pred - 1.96*model1$se), col="red", lty=2, lwd=2)
+```
+
+```{r}
+y.fit$order
+```
+
+
+Check Residual IID \
+```{r}
+resid <- y.fit$res[-(1:y.fit$order)]
+plot(resid)
+abline(h=0)
+acf(resid)
+```
+
+
+```{r}
+Box.test(resid, lag=20, type="Ljung-Box", fitdf=1)
+Box.test(resid, lag=20, type="Ljung-Box", fitdf=1)
+```
+
+
+```{r}
+qqnorm(resid)
+hist(resid)
+```
+
+
+
+
+## 4.2 MA(q=2) Note12 Overshorts
+
+by acf, cuts off after lag(2) 
+
+```{r}
+model.fit2 <- arima(Y, order=c(0, 0, 2))
+model.fit2
+```
+
+```{r}
+model2 <- predict(model.fit2, n.ahead=10)
+model2
+```
+
+```{r}
+n <- length(Y)
+L <- min(Y)
+U <- max(Y)
+plot(Y, xlim=c(1, n+3), ylim=c(L,U), type="line")
+abline(h=0)
+
+lines(model2$pred, col="red", lwd=2)
+lines((model2$pred + 1.96*model2$se), col="red", lty=2, lwd=2)
+lines((model2$pred - 1.96*model2$se), col="red", lty=2, lwd=2)
+```
+
+```{r}
+num <- length(OT)
+# AIC
+AIC(model.fit1)/num - log(2*pi)
+# BIC
+AIC(model.fit1, k=log(num))/num - log(2*pi)
+# AICc
+log(sum(resid(model.fit1)^2)/num) + (num +5)/(num -5 -2)
+```
+
+
+Check Residual IID \
+```{r}
+resid <- y.fit$res[-(1:y.fit$order)]
+plot(resid)
+abline(h=0)
+acf(resid)
+```
+
+
+```{r}
+Box.test(resid, lag=20, type="Ljung-Box", fitdf=1)
+Box.test(resid, lag=20, type="Ljung-Box", fitdf=1)
+```
+
+
+```{r}
+qqnorm(resid)
+hist(resid)
+```
+
+
+
+
+
+
+```{r}
+mean(Y)
+acf(Y, plot=F, type="cov")
+```
+
+```{r}
+Y.t <- Y - mean(Y)
+model3.fit <- arima(Y.t, order=c(0, 0, 2), include.mean = F)
+model3.fit
+
+```
+
+```{r}
+model3 <- predict(model3.fit, n.ahead=10)
+model3
+
+n <- length(Y)
+L <- min(Y)
+U <- max(Y)
+plot(Y, xlim=c(1, n+3), ylim=c(L,U), type="line")
+abline(h=0)
+
+lines(model3$pred, col="red", lwd=2)
+lines((model3$pred + 1.96*model3$se), col="red", lty=2, lwd=2)
+lines((model3$pred - 1.96*model3$se), col="red", lty=2, lwd=2)
+```
+
+```{r}
+num <- length(OT)
+# AIC
+AIC(model.fit1)/num - log(2*pi)
+# BIC
+AIC(model.fit1, k=log(num))/num - log(2*pi)
+# AICc
+log(sum(resid(model.fit1)^2)/num) + (num +5)/(num -5 -2)
+```
+
+
+
+## 4.3 Order Selection Note13
+
+sample ACF and PACF plots are of little use when both p>0 and q>0 in ARMA model. \
+we need to find a systematic way to choose p and q. Assuming white noise normally distributed, we choose the model which has the smallest AICc value. \ 
+
+```{r}
+n <- length(Y)
+for (p in 0:9){
+  for (q in 0:3){
+    model.fit <- arima(Y, order = c(p,0,q), method="CSS-ML")
+    aicc <- model.fit$aic - 2*(p+q+1) + 2*(p+q+1)*n/(n-p-q-2)
+    cat("p= ", p, ", q= ", q, ", AICC= ", aicc, "code= ", model.fit$code, "\n")
+    
+  }
+}
+```
+
+
+```{r}
+library(forecast)
+auto.arima(Y)
+auto.arima(Y, d=0, ic="aicc", trace=T)
+```
+
+
+```{r}
+auto <- auto.arima(Y, ic="aicc", trace=T)
+```
+
+
+## 4.4 What if we fit the model directly from OT
+
+```{r}
+#library(forecast)
+OT.fit1 <- auto.arima(OT, trace=T, ic="aicc")
+OT.fit1
+```
+
+```{r}
+OT.fit2 <- arima(OT, order=c(8,0,0), include.mean=F, method="ML")
+OT.fit2
+```
+
+```{r}
+OT.fit2 <- arima(OT, order=c(0,0,2), include.mean=F, method="ML")
+OT.fit2
+```
+
+
+
+
+# 5 ARFIMA
+
+```{r}
+acf(OT, lag.max=100)
+```
+
+
+Long Memory process\
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

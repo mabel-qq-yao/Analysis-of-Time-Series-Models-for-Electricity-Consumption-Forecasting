@@ -1,0 +1,101 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library(astsa)
+library(tseries)
+library(fracdiff)
+library(forecast)
+
+#data(package = "astsa")
+```
+
+```{r}
+plot(varve, main="varve", ylab=" ")
+```
+```{r}
+hist(varve)
+```
+
+```{r}
+lvarve <- log(varve)
+plot(lvarve, main="log(varve)", ylab=" ")
+hist(lvarve)
+```
+
+
+```{r}
+u <- acf(lvarve, 100, plot=FALSE)
+plot(u[1:100], ylim=c(-.1,1), main="log(varve)")
+```
+
+```{r}
+adf.test(lvarve)
+adf.test(diff(lvarve))
+```
+
+```{r}
+m1 <- auto.arima(lvarve)
+summary(m1)
+```
+
+```{r}
+m2 <- fracdiff(lvarve, nar=1, nma=1, M=30)
+summary(m2)
+```
+
+```{r}
+p <- rep(1,31)
+for(k in 1:30){
+  p[k+1] <- (k-m2$d)*p[k]/(k+1)
+}
+plot(1:30, p[-1], ylab=expression(pi(d)), xlab="Index", type="h")
+```
+
+```{r}
+lvarve.fd <- diffseries(lvarve, m2$d)
+adf.test(lvarve.fd)
+m3 <- arima(lvarve.fd, order=c(1,0,1), include.mean=F)
+
+```
+
+```{r}
+acf(m1$resid, 100, xlim=c(4,97), ylim=c(-.2, .2), main="")
+acf(m3$resid, 100, xlim=c(4,97), ylim=c(-.2, .2), main="")
+```
+
+
+```{r}
+x <- fracdiff.sim(1000, d=.45, n.start=1001)
+ts.plot(x$series)
+acf(x$series)
+adf.test(x$series)
+fracdiff(x$series)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
